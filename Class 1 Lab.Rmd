@@ -1,0 +1,139 @@
+---
+title: 'Lab: Class One Survey Analysis'
+output: github_document
+---
+
+### **INSTRUCTIONS**
+
+#### **Complete all tasks 1-7 using reproducible coding practices (annotation of all code). Use R syntax to solve all problems (i.e. do not manually change values/variables in datasets or check them manually to make sure things are correct except as a double or triple check). Please cut and paste each problem before each R markdown chunk and annotate your code within the chunks.**
+
+##### 1. Import class one survey data from our Github site (<https://github.com/kijohnson/Advanced-Data-Analysis>) (The dataset is called 'Class 1 Survey Fall 2026.csv'), calling the R dataframe that you create *C1survey*.
+
+```{r}
+# Import the CSV file from GitHub and save it as C1survey
+C1survey <- read_csv("https://raw.githubusercontent.com/kijohnson/Advanced-Data-Analysis/refs/heads/main/Class%201%20Survey%20Fall%202026.csv")
+```
+
+##### 2. Determine: **a.** the number of observations (i.e. the number of people who filled out the survey) and **b.** the number of variables in the dataframe.
+
+```{r}
+
+# Check the dimensions of C1 survey (n=31)
+dim(C1survey)
+```
+
+##### 3. **a.** Rename the column variables to something shorter and that is descriptive of what the variable is about (for example *like_dogs* for the 'Do you like dogs?' question variable) and **b.** Display that they are renamed. **Hints**: You can use either the rename_with function or the names function. The list of names for time is:
+
+```{r, echo=TRUE}
+#Get column variable names
+
+c("id", "like_cats", "like_dogs", "have_desert", "slogan", "fav_day", "larkORowl", "fav_food", "fav_drink", "fav_season", "fav_month", "hobby", "program", "specialization", "stat_software", "R_exp", "coding_comfort", "coding_length", "top_three", "public_health_interest", "fav_num", "bday", "bmonth", "country", "state", "city",  "highest_educ_level")
+```
+
+```{r}
+
+# Rename columns 1-27 of C1survey with the new titles
+names(C1survey)[1:27] <-c("id", "like_cats", "like_dogs", "have_desert", "slogan", "fav_day", "larkORowl", "fav_food", "fav_drink", "fav_season", "fav_month", "hobby", "program", "specialization", "stat_software", "R_exp", "coding_comfort", "coding_length", "top_three", "public_health_interest", "fav_num", "bday", "bmonth", "country", "state", "city",  "highest_educ_level")
+
+```
+
+##### 4. Write code to determine and display the number of factor, integer, numerical, and character variables there are in the *C1survey* dataset. **Suggestion**: Try to ask ChatGPT for a solution if you are unsure. There is a really short answer to this but we want to see what students come up with!
+
+```{r}
+
+# Use the sum function to count the number of factor, integer, numeric, and character variables and print below
+
+
+sum(sapply(C1survey, is.factor))
+# 0 factor variables
+
+sum(sapply(C1survey, is.integer))
+# 0 integer variables
+
+sum(sapply(C1survey, is.numeric))
+# 4 numeric variables
+
+sum(sapply(C1survey, is.character)) 
+# 23 character variables
+```
+
+##### 5. **a.** Using code, check the *bday* and *bmonth* variables for any unusual or missing values (**hint**: use table function). If you find any, **b.** describe what you will do with the unusual values in a comment before or immediately following the code that does it, and **c.** after you have cleaned up any unusual values, find the median bday and month. \*Note: please make sure that your bday and month variables are numeric before doing statistics
+
+```{r}
+
+# Make a table of birth dates and birth months
+table(C1survey$bday, C1survey$bmonth)
+
+# There were two birthdates with the months as a string and a few birth months as strings instead of numeric. I would recode these to all be numeric.
+
+C1survey$bday[C1survey$bday == "30-Nov"] <- "30"
+C1survey$bday[C1survey$bday == "29-Nov"] <- "29"
+C1survey$bmonth[C1survey$bmonth == "May"] <- "5"
+C1survey$bmonth[C1survey$bmonth == "March"] <- "3"
+C1survey$bmonth[C1survey$bmonth == "November"] <- "11"
+C1survey$bmonth[C1survey$bmonth == "February"] <- "2"
+
+# Make an updated table to check
+table(C1survey$bday, C1survey$bmonth)
+```
+
+##### 6. **a.** Create a new variable called *bseason* that gives the season according to Northern Meteorological season in which respondents were born (winter = 12/1 to 2/29, spring = 3/1 to 5/31, summer = 6/1 to 8/31, fall = 9/1 to 11/30). **b**. Using the table function, print a table of Seasons in the columns and bmonths in the rows that allows you to check that the coding is correct **c**. Sum the columns using the addmargins function to answer the question of how many classmates were born in each season? Include your answer in the code.
+
+```{r}
+
+# Get the class of bmonth (character)
+class(C1survey$bmonth)
+
+# Change birth month to be numeric and store under month_numeric
+month_numeric <- as.numeric(C1survey$bmonth)
+
+# Check the class of month_numeric to make sure
+class(month_numeric)
+
+# Make an array called bseason
+C1survey$bseason <- array(C1survey, dim = c(31))
+
+# Omit missing birth month values
+month_numeric <- na.omit(month_numeric)
+
+# Make an array to go through each value (person) of bseason, and for each person, use logic to determine the season
+for (i in 1:length(C1survey$bseason)) {
+  if ((month_numeric[i] == 12) || (month_numeric[i] <= 2)) {
+    C1survey$bseason[i] = "winter"
+  } else if ((month_numeric[i] >= 3) && (month_numeric[i] <= 5)) {
+    C1survey$bseason[i] = "spring"
+  } else if ((month_numeric[i] >= 6) && (month_numeric[i] <= 8)) {
+    C1survey$bseason[i] = "summer"
+  } else {
+    C1survey$bseason[i] = "fall"
+  }
+}
+
+```
+
+##### 7. Pick your favorite variable or variables to analyze, come up with a question you want to answer with that variable or variables, generate the code, and provide an answer to your question. Describe what you did using comments (i.e. \#'s).
+
+```{r}
+
+# Question: How many people had the same favorite season as the season they were born in?
+
+# Make a new variable for favorite season so the code isn't overwritten
+C1survey$season_lowercase <- C1survey$fav_season
+
+# Make the favorite seasons lowercase to match the birth seasons
+C1survey$season_lowercase <- tolower(C1survey$season_lowercase)
+
+
+# Check if favorite season is equal to birth season, and if so, print the word "True"
+
+for (i in 1:length(C1survey$season_lowercase)) {
+  if (C1survey$season_lowercase[i] == C1survey$bseason[i]) {
+      print ("True")
+  }
+}
+
+# Output: 10 "True"s, meaning 10 people had the same favorite season and birth season- can verify this with the data
+```
+
+```         
+```
